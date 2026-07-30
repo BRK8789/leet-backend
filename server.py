@@ -964,7 +964,7 @@ async def update_settings(body: SettingsIn, request: Request):
 
 @api.get("/")
 async def root():
-    return {"status": "ok", "service": "LeetCode Tracker"}
+    return {"status": "ok", "service": "LeetCode Tracker", "version": "v2_cors_fix"}
 
 
 # Include the router
