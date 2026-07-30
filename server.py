@@ -970,16 +970,6 @@ async def root():
 # Include the router
 app.include_router(api)
 
-_cors_origins = os.environ.get("CORS_ORIGINS", "*").split(",")
-_cors_allow_credentials = "*" not in _cors_origins  # can't combine wildcard with credentials
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=_cors_allow_credentials,
-    allow_origins=_cors_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
