@@ -99,19 +99,19 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-async def get_current_user(request: Request) -> dict:
-    return await get_current_user_from_request(request)
+async def get_current_user(request: Request, required: bool = False) -> dict:
+    return await get_current_user_from_request(request, required=required)
 
 
 async def require_admin(request: Request) -> dict:
-    user = await get_current_user(request)
+    user = await get_current_user(request, required=False)
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
 
 async def require_admin_or_faculty(request: Request) -> dict:
-    user = await get_current_user(request)
+    user = await get_current_user(request, required=False)
     if user.get("role") not in ("admin", "faculty"):
         raise HTTPException(status_code=403, detail="Admin/Faculty access required")
     return user
@@ -198,7 +198,7 @@ async def logout(response: Response):
 
 @api.get("/auth/me")
 async def me(request: Request):
-    user = await get_current_user(request)
+    user = await get_current_user(request, required=True)
     return user_to_public(user)
 
 

@@ -67,9 +67,16 @@ def user_to_public(user: dict) -> dict:
     }
 
 
-async def get_current_user_from_request(request: Request) -> dict:
+async def get_current_user_from_request(request: Request, required: bool = True) -> dict:
     """Extract token from cookie or Authorization header, verify against DB."""
     from server import db  # local import to avoid circular
+
+    guest_user = {
+        "_id": ObjectId("000000000000000000000000"),
+        "role": "admin",
+        "name": "Public Guest",
+        "email": "guest@public.com",
+    }
 
     token = request.cookies.get("access_token")
     if not token:
@@ -77,18 +84,28 @@ async def get_current_user_from_request(request: Request) -> dict:
         if auth_header.startswith("Bearer "):
             token = auth_header[7:]
     if not token:
+        if not required:
+            return guest_user
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
         payload = decode_token(token)
         if payload.get("type") != "access":
+            if not required:
+                return guest_user
             raise HTTPException(status_code=401, detail="Invalid token type")
         user = await db.users.find_one({"_id": ObjectId(payload["sub"])})
         if not user:
+            if not required:
+                return guest_user
             raise HTTPException(status_code=401, detail="User not found")
         return user
     except jwt.ExpiredSignatureError:
+        if not required:
+            return guest_user
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
+        if not required:
+            return guest_user
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
